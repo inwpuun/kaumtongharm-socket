@@ -1,0 +1,98 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Post {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
+}
+
+model Chat {
+  id         Int          @id @default(autoincrement())
+  Message    Message[]
+  gameRoomId Int          @unique
+  gameRoom   GameRoom     @relation(fields: [gameRoomId], references: [id])
+  UserResult UserResult[]
+  User       User[]
+}
+
+model User {
+  id             String       @id
+  username       String       @unique
+  hashedPassword String
+  messages       Message[]
+  chat           Chat?        @relation(fields: [chatId], references: [id])
+  UserResult     UserResult[]
+  Session        Session[]
+  chatId         Int?
+}
+
+model Session {
+  id        String   @id
+  userId    String
+  expiresAt DateTime
+  user      User     @relation(references: [id], fields: [userId], onDelete: Cascade)
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  message   String
+  sender    String
+  chatId    Int
+  chat      Chat     @relation(fields: [chatId], references: [id])
+  user      User     @relation(fields: [sender], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model GameRoom {
+  id          Int          @id @default(autoincrement())
+  roomName    String
+  maxPlayers  Int
+  rounds      Int
+  description String
+  roundTime   Int          @default(240)
+  isBegin     Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  Round       Round[]
+  UserResult  UserResult[]
+  chat        Chat?
+}
+
+model Round {
+  id         Int          @id @default(autoincrement())
+  startedAt  DateTime     @default(now())
+  gameRoomId Int
+  game       GameRoom     @relation(fields: [gameRoomId], references: [id])
+  UserResult UserResult[]
+}
+
+model UserResult {
+  id           Int      @id @default(autoincrement())
+  userId       String
+  kuamTongHarm String
+  status       String   @default("alive")
+  user         User     @relation(fields: [userId], references: [id])
+  chatId       Int
+  chat         Chat     @relation(fields: [chatId], references: [id])
+  gameRoomId   Int
+  game         GameRoom @relation(fields: [gameRoomId], references: [id])
+  roundId      Int
+  round        Round    @relation(fields: [roundId], references: [id])
+  point        Int      @default(0)
+}
+
+model KaumTongHarm {
+  id   Int     @id @default(autoincrement())
+  word String
+  type String?
+}
