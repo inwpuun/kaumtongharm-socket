@@ -3,14 +3,15 @@ FROM node:20-alpine
 WORKDIR /
 COPY package*.json  ./
 
-RUN npm ci
+RUN npm install
+
+FROM node:20-alpine
+
+WORKDIR /
+
+COPY --from=dep /node_modules /node_modules
 
 COPY . .
 
-RUN npx prisma generate
-RUN npm run build
-
-EXPOSE 3000/tcp
-
-CMD [ "node", "dist/main.js" ]
+CMD ["npm", "start"]
 
